@@ -11,3 +11,43 @@ export function toKmPerKwh(value, unit) {
 export function toKmPerL(value, unit) {
   return unit === UNITS.ice.L_PER_100KM ? 100 / value : value;
 }
+
+export function compare(input) {
+  const { distanceKm, evKmPerKwh, evRate, iceKmPerL, icePrice } = input;
+
+  const energyKwh = distanceKm / evKmPerKwh;
+  const evCost = energyKwh * evRate;
+
+  const fuelL = distanceKm / iceKmPerL;
+  const iceCost = fuelL * icePrice;
+
+  const savings = iceCost - evCost;
+
+  let cheaper = 'equal';
+  if (evCost < iceCost) cheaper = 'ev';
+  else if (iceCost < evCost) cheaper = 'ice';
+
+  return {
+    distanceKm,
+    ev: {
+      model: input.evModel,
+      energyKwh,
+      efficiency: evKmPerKwh,
+      rate: evRate,
+      cost: evCost,
+      costPerKm: evCost / distanceKm,
+    },
+    ice: {
+      model: input.iceModel,
+      fuelL,
+      efficiency: iceKmPerL,
+      price: icePrice,
+      cost: iceCost,
+      costPerKm: iceCost / distanceKm,
+    },
+    savings,
+    savingsPct: iceCost === 0 ? 0 : (savings / iceCost) * 100,
+    iceMultiple: evCost === 0 ? 0 : iceCost / evCost,
+    cheaper,
+  };
+}
