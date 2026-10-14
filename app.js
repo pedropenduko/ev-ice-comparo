@@ -1,5 +1,5 @@
 import {
-  UNITS, toKmPerKwh, toKmPerL, compare, project, validate,
+  toKmPerKwh, toKmPerL, compare, project, validate,
   formatPeso, formatNumber, buildTripStatement, buildPerKmStatement,
   buildProjectionStatement,
 } from './logic.js';
