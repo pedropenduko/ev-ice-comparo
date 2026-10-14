@@ -1,0 +1,206 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  UNITS,
+  toKmPerKwh, toKmPerL,
+  compare,
+  project,
+  validate,
+  formatPeso, formatNumber,
+  buildTripStatement, buildPerKmStatement, buildProjectionStatement,
+} from '../logic.js';
+
+function near(actual, expected, eps = 1e-6) {
+  assert.ok(Math.abs(actual - expected) < eps, `${actual} !~= ${expected}`);
+}
+
+test('module loads', () => {
+  assert.equal(UNITS.ev.KM_PER_KWH, 'km/kWh');
+});
+
+test('toKmPerKwh passes through km/kWh', () => {
+  near(toKmPerKwh(8, UNITS.ev.KM_PER_KWH), 8);
+});
+
+test('toKmPerKwh converts kWh/100km', () => {
+  near(toKmPerKwh(12.5, UNITS.ev.KWH_PER_100KM), 8);
+});
+
+test('toKmPerL passes through km/L', () => {
+  near(toKmPerL(13, UNITS.ice.KM_PER_L), 13);
+});
+
+test('toKmPerL converts L/100km', () => {
+  near(toKmPerL(100 / 13, UNITS.ice.L_PER_100KM), 13);
+});
+
+const EXAMPLE = {
+  distanceKm: 75,
+  evModel: 'GAC AION V Elite',
+  evKmPerKwh: 8,
+  evRate: 14.5,
+  iceModel: 'Toyota Fortuner',
+  iceKmPerL: 13,
+  icePrice: 70,
+};
+
+test('compare computes EV figures for the worked example', () => {
+  const r = compare(EXAMPLE);
+  near(r.ev.energyKwh, 9.375);
+  near(r.ev.cost, 135.9375);
+  near(r.ev.costPerKm, 1.8125);
+});
+
+test('compare computes ICE figures for the worked example', () => {
+  const r = compare(EXAMPLE);
+  near(r.ice.fuelL, 75 / 13);
+  near(r.ice.cost, 5250 / 13);
+  near(r.ice.costPerKm, (5250 / 13) / 75);
+});
+
+test('compare computes savings, percentage and multiple', () => {
+  const r = compare(EXAMPLE);
+  near(r.savings, 5250 / 13 - 135.9375);
+  near(r.savingsPct, (5250 / 13 - 135.9375) / (5250 / 13) * 100);
+  near(r.iceMultiple, (5250 / 13) / 135.9375);
+  assert.equal(r.cheaper, 'ev');
+});
+
+test('compare flags ICE cheaper when it is', () => {
+  const r = compare({ ...EXAMPLE, evRate: 100 });
+  assert.equal(r.cheaper, 'ice');
+});
+
+test('compare carries through models and distance', () => {
+  const r = compare(EXAMPLE);
+  assert.equal(r.ev.model, 'GAC AION V Elite');
+  assert.equal(r.ice.model, 'Toyota Fortuner');
+  assert.equal(r.distanceKm, 75);
+});
+
+const PROJ_INPUT = {
+  evKmPerKwh: 8,
+  evRate: 14.5,
+  iceKmPerL: 13,
+  icePrice: 70,
+  dailyKm: 40,
+  daysPerWeek: 5,
+};
+
+test('project computes distances', () => {
+  const p = project(PROJ_INPUT);
+  near(p.weeklyKm, 200);
+  near(p.monthlyKm, 200 * 52 / 12);
+  near(p.annualKm, 10400);
+});
+
+test('project computes monthly costs and savings', () => {
+  const p = project(PROJ_INPUT);
+  near(p.monthly.evCost, (200 * 52 / 12) / 8 * 14.5);
+  near(p.monthly.iceCost, (200 * 52 / 12) / 13 * 70);
+  near(p.monthly.savings, p.monthly.iceCost - p.monthly.evCost);
+});
+
+test('project computes annual costs and savings', () => {
+  const p = project(PROJ_INPUT);
+  near(p.annual.evCost, 18850);
+  near(p.annual.iceCost, 56000);
+  near(p.annual.savings, 37150);
+});
+
+const VALID = {
+  distanceKm: 75,
+  evEfficiency: 8,
+  iceEfficiency: 13,
+  evRate: 14.5,
+  icePrice: 70,
+};
+
+test('validate passes clean input', () => {
+  assert.deepEqual(validate(VALID), []);
+});
+
+test('validate rejects zero and negative required fields', () => {
+  const errors = validate({ ...VALID, distanceKm: 0, evEfficiency: -1 });
+  const fields = errors.map((e) => e.field);
+  assert.ok(fields.includes('distanceKm'));
+  assert.ok(fields.includes('evEfficiency'));
+  assert.equal(errors.length, 2);
+});
+
+test('validate rejects missing / non-numeric values', () => {
+  const errors = validate({ ...VALID, icePrice: NaN, evRate: undefined });
+  const fields = errors.map((e) => e.field);
+  assert.ok(fields.includes('icePrice'));
+  assert.ok(fields.includes('evRate'));
+});
+
+test('validate error objects carry a message', () => {
+  const [err] = validate({ ...VALID, distanceKm: 0 });
+  assert.equal(err.field, 'distanceKm');
+  assert.equal(typeof err.message, 'string');
+  assert.ok(err.message.length > 0);
+});
+
+test('formatPeso renders PHP with peso sign and 2 decimals', () => {
+  const s = formatPeso(403.846);
+  assert.ok(s.includes('₱'));
+  assert.ok(s.includes('403.85'));
+});
+
+test('formatNumber rounds to given decimals', () => {
+  assert.equal(formatNumber(9.375, 2), '9.38');
+  assert.equal(formatNumber(1.8125, 2), '1.81');
+});
+
+test('buildTripStatement describes EV savings', () => {
+  const r = compare(EXAMPLE);
+  const s = buildTripStatement(r);
+  assert.ok(s.startsWith('Driving the EV saves ₱'));
+  assert.ok(s.includes('267.91'));
+  assert.ok(s.includes('66.3%'));
+});
+
+test('buildTripStatement handles ICE-cheaper case', () => {
+  const r = compare({ ...EXAMPLE, evRate: 100 });
+  const s = buildTripStatement(r);
+  assert.ok(s.includes('ICE vehicle is cheaper'));
+});
+
+test('buildPerKmStatement states the multiple to one decimal', () => {
+  const r = compare(EXAMPLE);
+  const s = buildPerKmStatement(r);
+  assert.ok(s.includes('3.0 times'));
+});
+
+test('buildProjectionStatement states monthly and annual savings', () => {
+  const p = project(PROJ_INPUT);
+  const s = buildProjectionStatement(p);
+  assert.ok(s.includes('per month'));
+  assert.ok(s.includes('per year'));
+});
+
+test('buildPerKmStatement adapts when ICE is cheaper', () => {
+  const r = compare({ ...EXAMPLE, evRate: 100 });
+  const s = buildPerKmStatement(r);
+  assert.ok(s.includes('The EV costs approximately'));
+  assert.ok(s.includes('times more per kilometer than the ICE vehicle'));
+});
+
+test('compare flags equal costs', () => {
+  const r = compare({
+    distanceKm: 10, evModel: 'A', evKmPerKwh: 1, evRate: 1,
+    iceModel: 'B', iceKmPerL: 1, icePrice: 1,
+  });
+  assert.equal(r.cheaper, 'equal');
+  assert.equal(buildTripStatement(r), 'Both vehicles cost the same for this trip.');
+  assert.equal(buildPerKmStatement(r), 'Both vehicles cost about the same per kilometer.');
+});
+
+test('buildProjectionStatement adapts when the EV costs more', () => {
+  const p = project({ ...PROJ_INPUT, evRate: 100 });
+  const s = buildProjectionStatement(p);
+  assert.ok(s.includes('would cost approximately'));
+  assert.ok(s.includes('more per month'));
+  assert.ok(s.includes('more per year'));
+});

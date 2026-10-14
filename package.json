@@ -1,0 +1,9 @@
+{
+  "name": "ev-ice-comparo",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/logic.test.js"
+  }
+}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EV vs ICE Cost Comparison</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app-header">
+      <h1>EV vs ICE Cost Comparison</h1>
+      <p class="tagline">See the real-world energy-cost difference for your trip, in ₱.</p>
+    </header>
+
+    <section class="hero" id="hero" aria-live="polite">
+      <div class="hero-label">You save this trip</div>
+      <div class="hero-amount" id="hero-amount">—</div>
+      <div class="hero-badges">
+        <span class="pill" id="hero-pct">—</span>
+        <span class="badge" id="hero-winner">—</span>
+      </div>
+    </section>
+
+    <section class="inputs">
+      <div class="card card-ev">
+        <h2>⚡ Electric Vehicle</h2>
+        <label>Car model
+          <input type="text" id="ev-model" value="GAC AION V Elite" />
+        </label>
+        <label>Efficiency
+          <span class="field-row">
+            <input type="number" id="ev-efficiency" value="8" min="0" step="any" />
+            <select id="ev-unit">
+              <option value="km/kWh" selected>km/kWh</option>
+              <option value="kWh/100km">kWh/100km</option>
+            </select>
+          </span>
+        </label>
+        <p class="field-error" id="err-ev-efficiency"></p>
+        <label>Electricity rate (₱/kWh)
+          <input type="number" id="ev-rate" value="14.5" min="0" step="any" />
+        </label>
+        <p class="field-error" id="err-ev-rate"></p>
+      </div>
+
+      <div class="card card-ice">
+        <h2>⛽ ICE Vehicle</h2>
+        <label>Car model
+          <input type="text" id="ice-model" value="Toyota Fortuner" />
+        </label>
+        <label>Efficiency
+          <span class="field-row">
+            <input type="number" id="ice-efficiency" value="13" min="0" step="any" />
+            <select id="ice-unit">
+              <option value="km/L" selected>km/L</option>
+              <option value="L/100km">L/100km</option>
+            </select>
+          </span>
+        </label>
+        <p class="field-error" id="err-ice-efficiency"></p>
+        <label>Fuel price (₱/liter)
+          <input type="number" id="ice-price" value="70" min="0" step="any" />
+        </label>
+        <p class="field-error" id="err-ice-price"></p>
+      </div>
+
+      <div class="card card-trip">
+        <h2>Trip</h2>
+        <label>Distance travelled (km)
+          <input type="number" id="distance" value="75" min="0" step="any" />
+        </label>
+        <p class="field-error" id="err-distanceKm"></p>
+        <div class="actions">
+          <button type="button" id="calc-btn">Calculate</button>
+          <button type="button" id="reset-btn" class="secondary">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="results" id="results">
+      <div class="result-cards">
+        <div class="card result-ev">
+          <h3>⚡ <span id="r-ev-model">EV</span></h3>
+          <dl>
+            <dt>Distance</dt><dd id="r-ev-distance">—</dd>
+            <dt>Energy used</dt><dd id="r-ev-energy">—</dd>
+            <dt>Efficiency</dt><dd id="r-ev-eff">—</dd>
+            <dt>Electricity price</dt><dd id="r-ev-rate">—</dd>
+            <dt>Total cost</dt><dd id="r-ev-cost" class="emph">—</dd>
+            <dt>Cost per km</dt><dd id="r-ev-perkm">—</dd>
+          </dl>
+        </div>
+        <div class="card result-ice">
+          <h3>⛽ <span id="r-ice-model">ICE</span></h3>
+          <dl>
+            <dt>Distance</dt><dd id="r-ice-distance">—</dd>
+            <dt>Fuel used</dt><dd id="r-ice-fuel">—</dd>
+            <dt>Efficiency</dt><dd id="r-ice-eff">—</dd>
+            <dt>Fuel price</dt><dd id="r-ice-price">—</dd>
+            <dt>Total cost</dt><dd id="r-ice-cost" class="emph">—</dd>
+            <dt>Cost per km</dt><dd id="r-ice-perkm">—</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="bars" aria-hidden="true">
+        <div class="bar-row"><span class="bar-label">EV</span>
+          <div class="bar-track"><div class="bar-fill bar-ev" id="bar-ev"></div></div>
+        </div>
+        <div class="bar-row"><span class="bar-label">ICE</span>
+          <div class="bar-track"><div class="bar-fill bar-ice" id="bar-ice"></div></div>
+        </div>
+      </div>
+
+      <p class="statement" id="stmt-trip">—</p>
+      <p class="statement" id="stmt-perkm">—</p>
+    </section>
+
+    <section class="card projections">
+      <h2>Projected usage</h2>
+      <div class="proj-inputs">
+        <label>Average daily distance (km)
+          <input type="number" id="daily-km" value="40" min="0" step="any" />
+        </label>
+        <label>Driving days per week
+          <input type="number" id="days-per-week" value="5" min="0" max="7" step="any" />
+        </label>
+      </div>
+      <div class="proj-grid" id="proj-grid">
+        <div><span class="label">EV / month</span><span id="p-ev-month">—</span></div>
+        <div><span class="label">ICE / month</span><span id="p-ice-month">—</span></div>
+        <div><span class="label">Saved / month</span><span id="p-save-month" class="emph">—</span></div>
+        <div><span class="label">EV / year</span><span id="p-ev-year">—</span></div>
+        <div><span class="label">ICE / year</span><span id="p-ice-year">—</span></div>
+        <div><span class="label">Saved / year</span><span id="p-save-year" class="emph">—</span></div>
+      </div>
+      <p class="statement" id="stmt-proj">—</p>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
