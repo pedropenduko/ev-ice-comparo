@@ -1,16 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UNITS } from '../logic.js';
-import { toKmPerKwh, toKmPerL } from '../logic.js';
-import { compare } from '../logic.js';
-import { project } from '../logic.js';
-import { validate } from '../logic.js';
 import {
-  formatPeso,
-  formatNumber,
-  buildTripStatement,
-  buildPerKmStatement,
-  buildProjectionStatement,
+  UNITS,
+  toKmPerKwh, toKmPerL,
+  compare,
+  project,
+  validate,
+  formatPeso, formatNumber,
+  buildTripStatement, buildPerKmStatement, buildProjectionStatement,
 } from '../logic.js';
 
 function near(actual, expected, eps = 1e-6) {
@@ -167,7 +164,7 @@ test('buildTripStatement describes EV savings', () => {
 test('buildTripStatement handles ICE-cheaper case', () => {
   const r = compare({ ...EXAMPLE, evRate: 100 });
   const s = buildTripStatement(r);
-  assert.ok(/ICE/.test(s));
+  assert.ok(s.includes('ICE vehicle is cheaper'));
 });
 
 test('buildPerKmStatement states the multiple to one decimal', () => {
@@ -181,4 +178,29 @@ test('buildProjectionStatement states monthly and annual savings', () => {
   const s = buildProjectionStatement(p);
   assert.ok(s.includes('per month'));
   assert.ok(s.includes('per year'));
+});
+
+test('buildPerKmStatement adapts when ICE is cheaper', () => {
+  const r = compare({ ...EXAMPLE, evRate: 100 });
+  const s = buildPerKmStatement(r);
+  assert.ok(s.includes('The EV costs approximately'));
+  assert.ok(s.includes('times more per kilometer than the ICE vehicle'));
+});
+
+test('compare flags equal costs', () => {
+  const r = compare({
+    distanceKm: 10, evModel: 'A', evKmPerKwh: 1, evRate: 1,
+    iceModel: 'B', iceKmPerL: 1, icePrice: 1,
+  });
+  assert.equal(r.cheaper, 'equal');
+  assert.equal(buildTripStatement(r), 'Both vehicles cost the same for this trip.');
+  assert.equal(buildPerKmStatement(r), 'Both vehicles cost about the same per kilometer.');
+});
+
+test('buildProjectionStatement adapts when the EV costs more', () => {
+  const p = project({ ...PROJ_INPUT, evRate: 100 });
+  const s = buildProjectionStatement(p);
+  assert.ok(s.includes('would cost approximately'));
+  assert.ok(s.includes('more per month'));
+  assert.ok(s.includes('more per year'));
 });

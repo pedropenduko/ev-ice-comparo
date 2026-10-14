@@ -127,11 +127,23 @@ export function buildTripStatement(r) {
 }
 
 export function buildPerKmStatement(r) {
+  if (r.cheaper === 'equal') {
+    return 'Both vehicles cost about the same per kilometer.';
+  }
+  if (r.cheaper === 'ice') {
+    const evMultiple = r.ice.costPerKm === 0 ? 0 : r.ev.costPerKm / r.ice.costPerKm;
+    return `The EV costs approximately ${formatNumber(evMultiple, 1)} ` +
+      `times more per kilometer than the ICE vehicle.`;
+  }
   return `The ICE vehicle costs approximately ${formatNumber(r.iceMultiple, 1)} ` +
     `times more per kilometer than the EV.`;
 }
 
 export function buildProjectionStatement(p) {
-  return `Based on your driving pattern, using the EV could save approximately ` +
-    `${formatPeso(p.monthly.savings)} per month and ${formatPeso(p.annual.savings)} per year.`;
+  if (p.monthly.savings >= 0) {
+    return `Based on your driving pattern, using the EV could save approximately ` +
+      `${formatPeso(p.monthly.savings)} per month and ${formatPeso(p.annual.savings)} per year.`;
+  }
+  return `Based on your driving pattern, using the EV would cost approximately ` +
+    `${formatPeso(-p.monthly.savings)} more per month and ${formatPeso(-p.annual.savings)} more per year than the ICE vehicle.`;
 }
