@@ -1,0 +1,117 @@
+:root {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --ev: #4ade80;
+  --ev-border: #14532d;
+  --ice: #fb923c;
+  --ice-border: #7c2d12;
+  --cyan: #38bdf8;
+  --danger: #f87171;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.app { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.app-header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.tagline { margin: 0 0 20px; color: var(--muted); }
+
+.hero {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.hero-label { color: var(--muted); font-size: 0.85rem; }
+.hero-amount { font-size: 2.6rem; font-weight: 800; color: var(--ev); margin: 4px 0; }
+.hero-badges { display: flex; gap: 8px; justify-content: center; }
+.pill {
+  background: rgba(56, 189, 248, 0.15); color: var(--cyan);
+  font-weight: 700; font-size: 0.8rem; padding: 3px 12px; border-radius: 999px;
+}
+.badge {
+  background: rgba(74, 222, 128, 0.15); color: var(--ev);
+  font-weight: 700; font-size: 0.8rem; padding: 3px 12px; border-radius: 999px;
+}
+
+.inputs, .result-cards { display: grid; gap: 16px; }
+.inputs { grid-template-columns: 1fr 1fr; }
+.inputs .card-trip { grid-column: 1 / -1; }
+.result-cards { grid-template-columns: 1fr 1fr; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card h2, .card h3 { margin: 0 0 12px; font-size: 1.1rem; }
+.card-ev { border-color: var(--ev-border); }
+.card-ice { border-color: var(--ice-border); }
+
+label { display: block; margin-bottom: 10px; font-size: 0.85rem; color: var(--muted); }
+input, select {
+  width: 100%; margin-top: 4px; padding: 9px 10px;
+  background: #0b1220; color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; font-size: 1rem;
+}
+input:focus, select:focus { outline: 2px solid var(--cyan); outline-offset: 0; }
+input.invalid { border-color: var(--danger); }
+
+.field-row { display: flex; gap: 8px; }
+.field-row input { flex: 2; }
+.field-row select { flex: 1; }
+
+.field-error { color: var(--danger); font-size: 0.78rem; min-height: 1em; margin: 2px 0 6px; }
+
+.actions { display: flex; gap: 10px; margin-top: 8px; }
+button {
+  flex: 1; padding: 11px; border-radius: 8px; border: none;
+  background: var(--ev); color: #06230f; font-weight: 700; font-size: 1rem; cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+
+dl { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin: 0; }
+dt { color: var(--muted); font-size: 0.85rem; }
+dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+dd.emph { font-weight: 800; font-size: 1.05rem; }
+.result-ev dd.emph { color: var(--ev); }
+.result-ice dd.emph { color: var(--ice); }
+
+.bars { margin: 16px 0; display: grid; gap: 10px; }
+.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-label { width: 36px; color: var(--muted); font-size: 0.8rem; }
+.bar-track { flex: 1; background: #0b1220; border-radius: 6px; overflow: hidden; height: 20px; }
+.bar-fill { height: 100%; width: 0; transition: width 0.3s ease; }
+.bar-ev { background: var(--ev); }
+.bar-ice { background: var(--ice); }
+
+.statement { color: var(--text); margin: 8px 0; }
+
+.proj-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+.proj-grid .label { display: block; color: var(--muted); font-size: 0.78rem; }
+.proj-grid span.emph { color: var(--ev); font-weight: 800; }
+.proj-grid > div { background: #0b1220; border-radius: 8px; padding: 10px; }
+
+.results.hidden { display: none; }
+
+@media (max-width: 640px) {
+  .inputs, .result-cards, .proj-inputs { grid-template-columns: 1fr; }
+  .proj-grid { grid-template-columns: 1fr 1fr; }
+  .hero-amount { font-size: 2.1rem; }
+}
