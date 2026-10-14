@@ -1,8 +1,7 @@
-import {
-  toKmPerKwh, toKmPerL, compare, project, validate,
-  formatPeso, formatNumber, buildTripStatement, buildPerKmStatement,
-  buildProjectionStatement,
-} from './logic.js';
+// logic.js is loaded as a classic script before this file (see index.html),
+// so its functions (compare, project, validate, formatPeso, …) are available
+// here through the shared global scope — no import needed, which lets the page
+// run directly from a file:// URL (double-click) without a server.
 
 const $ = (id) => document.getElementById(id);
 

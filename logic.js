@@ -1,14 +1,16 @@
 // Pure calculation, validation, and formatting logic. No DOM access.
-export const UNITS = {
+// Loaded as a classic <script> in the browser (so index.html works by
+// double-clicking, no server needed) and via require() in the Node tests.
+const UNITS = {
   ev: { KM_PER_KWH: 'km/kWh', KWH_PER_100KM: 'kWh/100km' },
   ice: { KM_PER_L: 'km/L', L_PER_100KM: 'L/100km' },
 };
 
-export function toKmPerKwh(value, unit) {
+function toKmPerKwh(value, unit) {
   return unit === UNITS.ev.KWH_PER_100KM ? 100 / value : value;
 }
 
-export function toKmPerL(value, unit) {
+function toKmPerL(value, unit) {
   return unit === UNITS.ice.L_PER_100KM ? 100 / value : value;
 }
 
@@ -16,7 +18,7 @@ function costFor(distanceKm, kmPerUnit, pricePerUnit) {
   return (distanceKm / kmPerUnit) * pricePerUnit;
 }
 
-export function project(input) {
+function project(input) {
   const { evKmPerKwh, evRate, iceKmPerL, icePrice, dailyKm, daysPerWeek } = input;
 
   const weeklyKm = dailyKm * daysPerWeek;
@@ -38,7 +40,7 @@ export function project(input) {
   };
 }
 
-export function compare(input) {
+function compare(input) {
   const { distanceKm, evKmPerKwh, evRate, iceKmPerL, icePrice } = input;
 
   const energyKwh = distanceKm / evKmPerKwh;
@@ -86,7 +88,7 @@ const REQUIRED_POSITIVE = [
   ['icePrice', 'Fuel price must be greater than zero.'],
 ];
 
-export function validate(input) {
+function validate(input) {
   const errors = [];
   for (const [field, message] of REQUIRED_POSITIVE) {
     const value = input[field];
@@ -104,15 +106,15 @@ const pesoFormatter = new Intl.NumberFormat('en-PH', {
   maximumFractionDigits: 2,
 });
 
-export function formatPeso(n) {
+function formatPeso(n) {
   return pesoFormatter.format(n);
 }
 
-export function formatNumber(n, decimals = 2) {
+function formatNumber(n, decimals = 2) {
   return n.toFixed(decimals);
 }
 
-export function buildTripStatement(r) {
+function buildTripStatement(r) {
   if (r.cheaper === 'equal') {
     return 'Both vehicles cost the same for this trip.';
   }
@@ -126,7 +128,7 @@ export function buildTripStatement(r) {
     `equivalent to ${formatNumber(r.savingsPct, 1)}% savings compared with the ICE vehicle.`;
 }
 
-export function buildPerKmStatement(r) {
+function buildPerKmStatement(r) {
   if (r.cheaper === 'equal') {
     return 'Both vehicles cost about the same per kilometer.';
   }
@@ -139,11 +141,22 @@ export function buildPerKmStatement(r) {
     `times more per kilometer than the EV.`;
 }
 
-export function buildProjectionStatement(p) {
+function buildProjectionStatement(p) {
   if (p.monthly.savings >= 0) {
     return `Based on your driving pattern, using the EV could save approximately ` +
       `${formatPeso(p.monthly.savings)} per month and ${formatPeso(p.annual.savings)} per year.`;
   }
   return `Based on your driving pattern, using the EV would cost approximately ` +
     `${formatPeso(-p.monthly.savings)} more per month and ${formatPeso(-p.annual.savings)} more per year than the ICE vehicle.`;
+}
+
+// Export for Node's test runner (CommonJS). In the browser `module` is
+// undefined, so this block is skipped and the functions above remain available
+// to app.js through the shared global scope of classic scripts.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    UNITS, toKmPerKwh, toKmPerL, compare, project, validate,
+    formatPeso, formatNumber,
+    buildTripStatement, buildPerKmStatement, buildProjectionStatement,
+  };
 }

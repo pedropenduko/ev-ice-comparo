@@ -1,6 +1,6 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import {
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const {
   UNITS,
   toKmPerKwh, toKmPerL,
   compare,
@@ -8,7 +8,7 @@ import {
   validate,
   formatPeso, formatNumber,
   buildTripStatement, buildPerKmStatement, buildProjectionStatement,
-} from '../logic.js';
+} = require('../logic.js');
 
 function near(actual, expected, eps = 1e-6) {
   assert.ok(Math.abs(actual - expected) < eps, `${actual} !~= ${expected}`);
