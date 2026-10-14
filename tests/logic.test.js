@@ -5,6 +5,13 @@ import { toKmPerKwh, toKmPerL } from '../logic.js';
 import { compare } from '../logic.js';
 import { project } from '../logic.js';
 import { validate } from '../logic.js';
+import {
+  formatPeso,
+  formatNumber,
+  buildTripStatement,
+  buildPerKmStatement,
+  buildProjectionStatement,
+} from '../logic.js';
 
 function near(actual, expected, eps = 1e-6) {
   assert.ok(Math.abs(actual - expected) < eps, `${actual} !~= ${expected}`);
@@ -136,4 +143,42 @@ test('validate error objects carry a message', () => {
   assert.equal(err.field, 'distanceKm');
   assert.equal(typeof err.message, 'string');
   assert.ok(err.message.length > 0);
+});
+
+test('formatPeso renders PHP with peso sign and 2 decimals', () => {
+  const s = formatPeso(403.846);
+  assert.ok(s.includes('₱'));
+  assert.ok(s.includes('403.85'));
+});
+
+test('formatNumber rounds to given decimals', () => {
+  assert.equal(formatNumber(9.375, 2), '9.38');
+  assert.equal(formatNumber(1.8125, 2), '1.81');
+});
+
+test('buildTripStatement describes EV savings', () => {
+  const r = compare(EXAMPLE);
+  const s = buildTripStatement(r);
+  assert.ok(s.startsWith('Driving the EV saves ₱'));
+  assert.ok(s.includes('267.91'));
+  assert.ok(s.includes('66.3%'));
+});
+
+test('buildTripStatement handles ICE-cheaper case', () => {
+  const r = compare({ ...EXAMPLE, evRate: 100 });
+  const s = buildTripStatement(r);
+  assert.ok(/ICE/.test(s));
+});
+
+test('buildPerKmStatement states the multiple to one decimal', () => {
+  const r = compare(EXAMPLE);
+  const s = buildPerKmStatement(r);
+  assert.ok(s.includes('3.0 times'));
+});
+
+test('buildProjectionStatement states monthly and annual savings', () => {
+  const p = project(PROJ_INPUT);
+  const s = buildProjectionStatement(p);
+  assert.ok(s.includes('per month'));
+  assert.ok(s.includes('per year'));
 });

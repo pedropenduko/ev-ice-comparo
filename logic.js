@@ -96,3 +96,42 @@ export function validate(input) {
   }
   return errors;
 }
+
+const pesoFormatter = new Intl.NumberFormat('en-PH', {
+  style: 'currency',
+  currency: 'PHP',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+export function formatPeso(n) {
+  return pesoFormatter.format(n);
+}
+
+export function formatNumber(n, decimals = 2) {
+  return n.toFixed(decimals);
+}
+
+export function buildTripStatement(r) {
+  if (r.cheaper === 'equal') {
+    return 'Both vehicles cost the same for this trip.';
+  }
+  if (r.cheaper === 'ice') {
+    const diff = r.ev.cost - r.ice.cost;
+    const pct = (diff / r.ev.cost) * 100;
+    return `Driving the ICE vehicle is cheaper by ${formatPeso(diff)} for this trip, ` +
+      `equivalent to ${formatNumber(pct, 1)}% less than the EV.`;
+  }
+  return `Driving the EV saves ${formatPeso(r.savings)} for this trip, ` +
+    `equivalent to ${formatNumber(r.savingsPct, 1)}% savings compared with the ICE vehicle.`;
+}
+
+export function buildPerKmStatement(r) {
+  return `The ICE vehicle costs approximately ${formatNumber(r.iceMultiple, 1)} ` +
+    `times more per kilometer than the EV.`;
+}
+
+export function buildProjectionStatement(p) {
+  return `Based on your driving pattern, using the EV could save approximately ` +
+    `${formatPeso(p.monthly.savings)} per month and ${formatPeso(p.annual.savings)} per year.`;
+}
