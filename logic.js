@@ -12,6 +12,32 @@ export function toKmPerL(value, unit) {
   return unit === UNITS.ice.L_PER_100KM ? 100 / value : value;
 }
 
+function costFor(distanceKm, kmPerUnit, pricePerUnit) {
+  return (distanceKm / kmPerUnit) * pricePerUnit;
+}
+
+export function project(input) {
+  const { evKmPerKwh, evRate, iceKmPerL, icePrice, dailyKm, daysPerWeek } = input;
+
+  const weeklyKm = dailyKm * daysPerWeek;
+  const monthlyKm = (weeklyKm * 52) / 12;
+  const annualKm = weeklyKm * 52;
+
+  const forDistance = (km) => {
+    const evCost = costFor(km, evKmPerKwh, evRate);
+    const iceCost = costFor(km, iceKmPerL, icePrice);
+    return { evCost, iceCost, savings: iceCost - evCost };
+  };
+
+  return {
+    weeklyKm,
+    monthlyKm,
+    annualKm,
+    monthly: forDistance(monthlyKm),
+    annual: forDistance(annualKm),
+  };
+}
+
 export function compare(input) {
   const { distanceKm, evKmPerKwh, evRate, iceKmPerL, icePrice } = input;
 

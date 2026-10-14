@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { UNITS } from '../logic.js';
 import { toKmPerKwh, toKmPerL } from '../logic.js';
 import { compare } from '../logic.js';
+import { project } from '../logic.js';
 
 function near(actual, expected, eps = 1e-6) {
   assert.ok(Math.abs(actual - expected) < eps, `${actual} !~= ${expected}`);
@@ -70,4 +71,34 @@ test('compare carries through models and distance', () => {
   assert.equal(r.ev.model, 'GAC AION V Elite');
   assert.equal(r.ice.model, 'Toyota Fortuner');
   assert.equal(r.distanceKm, 75);
+});
+
+const PROJ_INPUT = {
+  evKmPerKwh: 8,
+  evRate: 14.5,
+  iceKmPerL: 13,
+  icePrice: 70,
+  dailyKm: 40,
+  daysPerWeek: 5,
+};
+
+test('project computes distances', () => {
+  const p = project(PROJ_INPUT);
+  near(p.weeklyKm, 200);
+  near(p.monthlyKm, 200 * 52 / 12);
+  near(p.annualKm, 10400);
+});
+
+test('project computes monthly costs and savings', () => {
+  const p = project(PROJ_INPUT);
+  near(p.monthly.evCost, (200 * 52 / 12) / 8 * 14.5);
+  near(p.monthly.iceCost, (200 * 52 / 12) / 13 * 70);
+  near(p.monthly.savings, p.monthly.iceCost - p.monthly.evCost);
+});
+
+test('project computes annual costs and savings', () => {
+  const p = project(PROJ_INPUT);
+  near(p.annual.evCost, 18850);
+  near(p.annual.iceCost, 56000);
+  near(p.annual.savings, 37150);
 });
