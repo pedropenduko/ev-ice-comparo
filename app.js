@@ -72,6 +72,7 @@ function render() {
     $('hero-amount').textContent = '—';
     $('hero-pct').textContent = 'Check inputs';
     $('hero-winner').textContent = '—';
+    blankProjection('Enter valid vehicle and trip details to see projections.');
     return;
   }
   clearErrors();
@@ -90,7 +91,10 @@ function render() {
 
   // Hero
   $('hero-amount').textContent = formatPeso(Math.abs(r.savings));
-  $('hero-pct').textContent = `${formatNumber(Math.abs(r.savingsPct), 1)}% savings`;
+  $('hero-pct').textContent =
+    r.cheaper === 'ev' ? `${formatNumber(r.savingsPct, 1)}% savings`
+    : r.cheaper === 'ice' ? `${formatNumber(Math.abs(r.savingsPct), 1)}% more expensive`
+    : 'equal cost';
   $('hero-winner').textContent =
     r.cheaper === 'ev' ? '⚡ EV wins' : r.cheaper === 'ice' ? '⛽ ICE wins' : 'Tie';
 
@@ -124,15 +128,19 @@ function render() {
   renderProjection(evKmPerKwh, raw.evRate, iceKmPerL, raw.icePrice);
 }
 
+const PROJ_CELLS = ['p-ev-month', 'p-ice-month', 'p-save-month', 'p-ev-year', 'p-ice-year', 'p-save-year'];
+
+function blankProjection(message) {
+  for (const id of PROJ_CELLS) $(id).textContent = '—';
+  $('stmt-proj').textContent = message;
+}
+
 function renderProjection(evKmPerKwh, evRate, iceKmPerL, icePrice) {
   const dailyKm = num('daily-km');
   const daysPerWeek = num('days-per-week');
 
   if (!(dailyKm > 0) || !(daysPerWeek > 0)) {
-    for (const id of ['p-ev-month', 'p-ice-month', 'p-save-month', 'p-ev-year', 'p-ice-year', 'p-save-year']) {
-      $(id).textContent = '—';
-    }
-    $('stmt-proj').textContent = 'Enter an average daily distance and driving days per week to see projections.';
+    blankProjection('Enter an average daily distance and driving days per week to see projections.');
     return;
   }
 
