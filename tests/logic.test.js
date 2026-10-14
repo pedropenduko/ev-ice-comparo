@@ -4,6 +4,7 @@ import { UNITS } from '../logic.js';
 import { toKmPerKwh, toKmPerL } from '../logic.js';
 import { compare } from '../logic.js';
 import { project } from '../logic.js';
+import { validate } from '../logic.js';
 
 function near(actual, expected, eps = 1e-6) {
   assert.ok(Math.abs(actual - expected) < eps, `${actual} !~= ${expected}`);
@@ -101,4 +102,38 @@ test('project computes annual costs and savings', () => {
   near(p.annual.evCost, 18850);
   near(p.annual.iceCost, 56000);
   near(p.annual.savings, 37150);
+});
+
+const VALID = {
+  distanceKm: 75,
+  evEfficiency: 8,
+  iceEfficiency: 13,
+  evRate: 14.5,
+  icePrice: 70,
+};
+
+test('validate passes clean input', () => {
+  assert.deepEqual(validate(VALID), []);
+});
+
+test('validate rejects zero and negative required fields', () => {
+  const errors = validate({ ...VALID, distanceKm: 0, evEfficiency: -1 });
+  const fields = errors.map((e) => e.field);
+  assert.ok(fields.includes('distanceKm'));
+  assert.ok(fields.includes('evEfficiency'));
+  assert.equal(errors.length, 2);
+});
+
+test('validate rejects missing / non-numeric values', () => {
+  const errors = validate({ ...VALID, icePrice: NaN, evRate: undefined });
+  const fields = errors.map((e) => e.field);
+  assert.ok(fields.includes('icePrice'));
+  assert.ok(fields.includes('evRate'));
+});
+
+test('validate error objects carry a message', () => {
+  const [err] = validate({ ...VALID, distanceKm: 0 });
+  assert.equal(err.field, 'distanceKm');
+  assert.equal(typeof err.message, 'string');
+  assert.ok(err.message.length > 0);
 });

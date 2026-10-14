@@ -77,3 +77,22 @@ export function compare(input) {
     cheaper,
   };
 }
+
+const REQUIRED_POSITIVE = [
+  ['distanceKm', 'Distance travelled must be greater than zero.'],
+  ['evEfficiency', 'EV efficiency must be greater than zero.'],
+  ['iceEfficiency', 'ICE efficiency must be greater than zero.'],
+  ['evRate', 'Electricity price must be greater than zero.'],
+  ['icePrice', 'Fuel price must be greater than zero.'],
+];
+
+export function validate(input) {
+  const errors = [];
+  for (const [field, message] of REQUIRED_POSITIVE) {
+    const value = input[field];
+    if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
+      errors.push({ field, message });
+    }
+  }
+  return errors;
+}
